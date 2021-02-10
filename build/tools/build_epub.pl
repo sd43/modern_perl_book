@@ -84,19 +84,24 @@ sub clean_name
     return 'i' . $name;
 }
 
+my $link_pos;
+
+sub Pod::PseudoPod::HTML::start_L
+{
+    my $self = shift;
+    $link_pos = length($self->{scratch});
+}
+
 sub Pod::PseudoPod::HTML::end_L
 {
     my $self = shift;
-    if ($self->{scratch} =~ s/\b(\w+)$//)
-    {
-        my $link = $1;
-        die "Unknown link $link\n" unless exists $anchors->{$link};
-        $self->{scratch} .=
-            '<a href="'
-          . $anchors->{$link}[0]
-          . '#' . $link . '">'
-          . $anchors->{$link}[1] . "</a>($link)";
-    }
+    my $link = substr($self->{scratch}, $link_pos);
+
+    die "Unknown link $link\n" unless exists $anchors->{$link};
+
+    substr($self->{scratch}, $link_pos, length($link),
+             '<a href="' . $anchors->{$link}[0] . "#$link\">"
+                         . $anchors->{$link}[1] . '</a>');
 }
 
 for my $chapter (@chapters)
